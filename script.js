@@ -4,6 +4,25 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
+function slugify(str)
+{
+    str = str.replace(/^\s+|\s+$/g, '');
+
+    str = str.toLowerCase();
+
+    var from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
+    var to   = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
+    for (var i=0, l=from.length ; i<l ; i++) {
+        str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+    }
+
+    str = str.replace(/[^a-z0-9 -]/g, '') 
+    .replace(/\s+/g, '-') 
+    .replace(/-+/g, '-'); 
+
+    return str;
+}
+
 
 document.addEventListener("DOMContentLoaded", function() {
   const promoWrapper = document.querySelector(".promo-wrapper");
@@ -57,16 +76,35 @@ const updatePageForHash = () => {
         headingProfile.innerText = `Welcome back, ${window.user.displayName}`;
         headingProfile.style.display = "flex";
       }
+      
+      const accountInfo = document.querySelectorAll(".paragraph")
+            
+      accountInfo[0].innerText = window.user.displayName;
+          
+      accountInfo[1].innerText = window.user.email;
+
 
       const profileRef = firebase
         .firestore()
         .collection("users")
-        .doc(firebase.auth().currentUser.email);
+        .doc(window.user.email);
+      
       profileRef
         .get()
-        .then(orderSnapshot => {
-          if (orderSnapshot.exists) {
-            const { dob } = orderSnapshot.data();
+        .then(profileSnapshot => {
+          if (profileSnapshot.exists) {
+              const { dob } = profileSnapshot.data();              
+            
+             let parsedDate;
+              if (typeof dob.toDate !== 'undefined') {
+                parsedDate = dob.toDate();
+              } else {
+                parsedDate = new Date(dob);
+              }
+            
+             const formattedDate = `${parsedDate.getUTCDate()}/${parsedDate.getUTCMonth()+1}/${parsedDate.getFullYear()}`
+
+              accountInfo[2].innerText = formattedDate;
           }
         })
         .catch(error => {
@@ -86,7 +124,8 @@ const updatePageForHash = () => {
             window.location.replace("/");
           })
           .catch(error => {
-            console.error(errr);
+            
+            alert(error.message);
           });          
         }
       });
@@ -108,18 +147,28 @@ const updatePageForHash = () => {
       const orderTemplateTop = orderWrap
         .querySelector(".top-section")
         .cloneNode(true);
+      
       const orderItemTemplate = orderWrap
         .querySelector(".product-item")
         .cloneNode(true);
       orderWrap.remove();
+      
+      while(orderWrap.firstChild) {
+        orderWrap.removeChild(orderWrap.firstChild);
+      }
 
       const orderContainer = document.getElementById("right-container");
-
+      
+      while(orderContainer.firstChild) {
+        orderContainer.removeChild(orderContainer.firstChild);
+      }
+      
       const ordersRef = firebase
         .firestore()
         .collection("users")
         .doc(firebase.auth().currentUser.email)
         .collection("orders");
+      
       ordersRef
         .get()
         .then(orderSnapshot => {
@@ -131,9 +180,8 @@ const updatePageForHash = () => {
           orderSnapshot.docs.forEach(doc => {
             const { items, total, orderedAt } = doc.data();
 
-            orderContainer.appendChild(orderTemplate.cloneNode(true));
+            const newOrderWrapper = orderWrap.cloneNode(true);
 
-            const orderWrap = orderContainer.querySelector(".order-wrap");          
 
             let orderedAtParsed;
             if (typeof orderedAt.toDate !== 'undefined') {
@@ -142,27 +190,32 @@ const updatePageForHash = () => {
               orderedAtParsed = new Date(orderedAt);
             }
             
-            const orderTop = orderTemplateTop.cloneNode(true);
-            
-            orderTop.querySelector(".date").innerText = `${orderedAtParsed.getUTCDate()}/${orderedAtParsed.getUTCMonth() + 1}/${orderedAtParsed.getFullYear()}`
-            orderTop.querySelectorAll(".date")[1].innerText = total;
 
-            orderWrap.appendChild(orderTop);
+            const newOrderTop = orderTemplateTop.cloneNode(true);
             
+            newOrderTop.querySelector(".date").innerText = `${orderedAtParsed.getUTCDate()}/${orderedAtParsed.getUTCMonth() + 1}/${orderedAtParsed.getFullYear()}`
+            newOrderTop.querySelectorAll(".date")[1].innerText = total;
+
+            
+            newOrderWrapper.appendChild(newOrderTop);
 
             items.forEach(item => {
-              const orderItem = orderItemTemplate.cloneNode(true);
-              orderItem.querySelector(".button.full.w-button").href = `/product/${item.slug}`
-              orderItem.querySelector(".review.w-button").addEventListener("click", () => handleItemReviewClick(item.slug))
+              const newOrderItem = orderItemTemplate.cloneNode(true);
+              newOrderItem.querySelector(".button.full.w-button").href = `/product/${item.slug}`
+              newOrderItem.querySelector(".review.w-button").addEventListener("click", () => handleItemReviewClick(item.slug))
               
-              orderItem.querySelector(".product-name").innerText = item.name;
-              orderItem.querySelector(".product-price-text.smaller").innerText = `$ ${item.price}`;
-              orderItem.querySelector(".quantity.tiny-left-margin").innerText = item.quantity;
+              if (item.thumbnail) {
+                newOrderItem.querySelector(".checkout-thumbnail").src = item.thumbnail;
+              } else {
+                newOrderItem.querySelector(".checkout-thumbnail").style.display = "none";            
+              }
               
-              orderWrap.appendChild(orderItem);
+              newOrderItem.querySelector(".product-name").innerText = item.name;
+              newOrderItem.querySelector(".product-price-text.smaller").innerText = `$ ${item.price}`;
+              newOrderItem.querySelector(".quantity.tiny-left-margin").innerText = item.quantity;
+              newOrderWrapper.appendChild(newOrderItem);
             });
-            
-            orderWrap.style.display = "block";
+              orderContainer.appendChild(newOrderWrapper);
           });
         })
         .catch(error => {
@@ -313,6 +366,11 @@ const updatePageForHash = () => {
         reviewModal.style.display = "flex";
         reviewModal.style.opacity = "1";
         
+        reviewModal.querySelector("#review-title").value = "";
+        reviewModal.querySelector("#review-content").value = "";
+        reviewModal.querySelector(".w-form-done").style.display = "none";
+        
+        
         reviewModal.addEventListener("submit", handleReviewModalFormSubmit);
       }
       
@@ -360,49 +418,52 @@ const updatePageForHash = () => {
         title.value = "";
         content.value = "";
         
-        reviewModal.style.display = "none";
-        reviewModal.style.opacity = "0";
+        const formDone = reviewModal.querySelector(".w-form-done");
+        formDone.style.display = "flex";
+        
+        reviewModal.removeEventListener("submit", handleReviewModalFormSubmit);
       }
       break;
-    //case "checkout":
+    // case "checkout":
     case "order-confirmation":
-      const orderItems = [];
-      const orderItemsEL = document.querySelectorAll(".order-item");
+      if (window.user) {
 
-      const total = document
-        .querySelector(".total-count-text")
-        .innerText.replace("CA$", "")
-        .trim();
-      const subtotal = document
-        .querySelector(".checkout-price")
-        .innerText.replace("CA$", "")
-        .trim();
+        const orderItems = [];
+        const orderItemsEL = document.querySelectorAll(".order-item");
 
-      orderItemsEL.forEach(el => {
-        const thumbnail = el.querySelector(".checkout-thumbnail").src;
-        const productItem = el.querySelector(".cc-name-text-cart");
-
-        const productSlug = productItem.href.split("/")[4];
-        const productName = productItem.innerText;
-        const productPrice = el
-          .querySelector(".order-item-price")
+        const total = document
+          .querySelector(".total-count-text")
           .innerText.replace("CA$", "")
           .trim();
-        const productQuantity = el
-          .querySelector(".checkout-quantity-wrap")
-          .innerText.replace("Quantity:", "")
+
+        const subtotal = document
+          .querySelector(".checkout-price")
+          .innerText.replace("CA$", "")
           .trim();
 
-        orderItems.push({
-          name: productName,
-          slug: productSlug,
-          thumbnail,
-          price: productPrice,
-          quantity: productQuantity
-        });
-      });
+        orderItemsEL.forEach(el => {
+          const thumbnail = el.querySelector(".checkout-thumbnail")
+          const name = el.querySelector("#product-name").innerText;
+          const quantity = el.querySelector("#product-quantity").innerText;
+          const price = el.querySelector("#product-price").innerText.replace("CA$", "").trim();
 
-      if (window.user) {
+
+          let slug = slugify(name);
+
+          let orderItem = {
+            name,
+            slug,
+            price,
+            quantity,
+          }
+
+          if (thumbnail) {
+            orderItem['thumbnail'] = thumbnail.src
+          }
+
+          orderItems.push(orderItem);
+        });
+
         const orders = firebase
           .firestore()
           .collection("users")
@@ -443,7 +504,7 @@ const updatePageForHash = () => {
 
       selectMonth.addEventListener("change", function(e) {
         if (selectYear.value != 0) {
-          const days = new Date(selectYear.value, e.target.value, 0).getDate();
+          const days = new Date(selectYear.value, e.target.value - 1, 0).getDate();
 
           for (let i = 1; i < days; i++) {
             const option = document.createElement("option");
@@ -479,13 +540,13 @@ const updatePageForHash = () => {
             await firebase
               .firestore()
               .collection("users")
-              .doc(currentUser.uid)
+              .doc(currentUser.email)
               .set({
-                dob: new Date(
+                 dob: firebase.firestore.Timestamp.fromDate(new Date(
                   selectYear.value,
-                  selectMonth.value,
+                  selectMonth.value - 1,
                   selectDay.value
-                )
+                ))
               });
 
             await currentUser.sendEmailVerification();
@@ -594,80 +655,296 @@ const updatePageForHash = () => {
             
             const { avgRating, numReviews } = productRefSnap.data();
 
-            const top = starsWrap.cloneNode(true);
-            top.querySelector(".review-big").innerText = avgRating;
-            top.querySelector(".total-reviews").innerText = `${numReviews} reviews`;                 
-            const FULL_STAR = top.querySelector(".icon.review-star").innerText;
-            const EMPTY_STAR = top.querySelector(".icon.review-star.empty").innerText;
-
-            const EMPTY_STARS = Math.floor(5 - avgRating);
-            top.querySelector(".review-star").innerHTML = Array(avgRating).fill(FULL_STAR).join("") + Array(EMPTY_STARS).fill(EMPTY_STAR).join("");
-
-            top.querySelector(".icon.review-star.empty").remove();
+            const top = starsWrap;
+            
+            const reviewHeader = top.querySelector(".review-big").cloneNode(true);
+            reviewHeader.innerText = Math.round(avgRating);
+            
+            const totalReviews = top.querySelector(".total-reviews").cloneNode(true);
+            totalReviews.innerText = `(${numReviews} reviews)`
+            
+            const STAR = top.querySelector(".icon.review-star").cloneNode(true);
+            const EMPTY = STAR.cloneNode(true);
+            
+            EMPTY.classList.remove("full");
+            EMPTY.classList.add("empty");
+            
+            while(top.firstChild) {
+              top.removeChild(top.firstChild);
+            }
+            
+            top.appendChild(reviewHeader);
+            
+            if (avgRating >= 5) {
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+            } else if (avgRating >= 4) {              
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+            } else if (avgRating >= 3) {
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+            } else if (avgRating >= 2){
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+            } else {
+              top.appendChild(STAR.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+              top.appendChild(EMPTY.cloneNode(true));
+            }
+            
+            top.appendChild(totalReviews);
             reviewsContainer.appendChild(top);
+            
+            const firstReviews = reviewsRef.orderBy("createdAt")
+                                            .limit(5);
+            
+            let nextReviews;
+            let lastVisible;
+            
+            firstReviews.get()
+                .then((reviewSnapshot) => {                              
+                  if (!reviewSnapshot.docs.length) {
+                    const message = document.createElement("span");
+                    message.innerText = "No reviews for this product.";
+                    reviewsContainer.appendChild(message);
+                    return
+                  }
 
-            reviewsRef
-              .get()
-              .then(reviewSnapshot => {
-                if (!reviewSnapshot.docs.length) {
-                  const message = document.createElement("span");
-                  message.innerText = "No reviews for this product.";
-                  reviewsContainer.appendChild(message);
-                }
+                  lastVisible = reviewSnapshot.docs[reviewSnapshot.docs.length-1];              
+                  nextReviews = reviewsRef.orderBy("createdAt").startAfter(lastVisible).limit(5);                                 
+              
+                  reviewSnapshot.docs.forEach(doc => {            
+                      const { title, content, rating, createdAt} = doc.data();
+                      const reviewItem = reviewWrap.cloneNode(true);
+                      const starsTitle = reviewItem.querySelector(".stars-title").cloneNode(true); 
+                      const reviewTitle = starsTitle.querySelector(".review-title").cloneNode(true);
+                    
+                    
+                      const STAR = starsTitle.querySelector(".icon.review-star").cloneNode(true);
+                      const EMPTY = STAR.cloneNode(true);
+                    
+                      EMPTY.classList.remove("full");
+                      EMPTY.classList.add("empty");
+                    
+                    
+                      while(starsTitle.firstChild) {
+                        starsTitle.removeChild(starsTitle.firstChild);
+                      }
+                                        
+                    
+                      const reviewComment = reviewItem.querySelector(".review-comment").cloneNode(true);                                          
+                      reviewComment.innerText = content;
+                      const reviewDate = reviewItem.querySelector(".review-date").cloneNode(true);
+                    
+                      while(reviewItem.firstChild) {
+                        reviewItem.removeChild(reviewItem.firstChild);
+                      }
+                    
+                     
+                    
+                      reviewTitle.innerText = title;
+                      starsTitle.appendChild(reviewTitle);
+                      
+                      // reviewItem.querySelector(".review-star.empty").remove();
+                    
+                      switch (rating) {
+                        case 5:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          break;
+                        case 4:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break;
+                        case 3:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break;
+                        case 2:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break;
+                        case 1:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break
+                      }
+                    
+                      reviewTitle.innerText = title;
+                      
+                      starsTitle.appendChild(reviewTitle);
+                    
+                      reviewItem.appendChild(starsTitle);
+                    
+                      
+                      let parsedDate;
+                      if (typeof createdAt.toDate !== 'undefined') {
+                         parsedDate = createdAt.toDate();
+                      } else {
+                         parsedDate = new Date(createdAt);
+                      }
+                    
+                      reviewDate.querySelector(".tiny-top-margin").innerText = `${monthNames[parsedDate.getMonth()]} ${parsedDate.getDate()} ${parsedDate.getFullYear()}`                      
+                      reviewItem.appendChild(reviewDate);
 
-              reviewSnapshot.docs.forEach(doc => {            
-                const { title, content, rating, createdAt} = doc.data();
-                const reviewItem = reviewWrap.cloneNode(true);
-                reviewItem.querySelector(".review-title").innerText = title;
-                reviewItem.querySelector(".review-comment").innerText = content;
+                      reviewItem.appendChild(reviewComment);
 
-                reviewItem.querySelector(".review-star.empty").remove();
-
-                const EMPTY_STARS = Math.floor(5 - rating);
-                reviewItem.querySelector(".review-star").innerHTML = Array(avgRating).fill(FULL_STAR).join("") + Array(EMPTY_STARS).fill(EMPTY_STAR).join("");
-                
-                let parsedDate;
-                if (typeof createdAt.toDate !== 'undefined') {
-                  parsedDate = createdAt.toDate();
-                } else {
-                  parsedDate = new Date(createdAt);
-                }
-
-                reviewItem.querySelector(".review-date .tiny-top-margin").innerText = `${monthNames[parsedDate.getMonth()]} ${parsedDate.getDate()} ${parsedDate.getFullYear()}`
-
-                reviewsContainer.appendChild(reviewItem);
-              });
-            })
-            .catch(error => {
-              console.error(error);
+                      reviewsContainer.appendChild(reviewItem);
+                  })
+              
+                seemore.addEventListener("click", () => loadMoreReviews());
+              
+                reviewsContainer.appendChild(seemore);
             });
+            
+            function loadMoreReviews() {
+              
+              const next = seemore.cloneNode(true);
+              seemore.remove();
+              
+              nextReviews.get()
+                            .then((nextSnapshot) => {
+                                nextSnapshot.docs.forEach(doc => {            
+                                  
+                                  let lastVisible = nextSnapshot.docs[nextSnapshot.docs.length-1];              
+                                  nextReviews = reviewsRef.orderBy("createdAt").startAfter(lastVisible).limit(5); 
+
+                   const { title, content, rating, createdAt} = doc.data();
+                      const reviewItem = reviewWrap.cloneNode(true);
+                      const starsTitle = reviewItem.querySelector(".stars-title").cloneNode(true); 
+                      const reviewTitle = starsTitle.querySelector(".review-title").cloneNode(true);
+                    
+                    
+                      const STAR = starsTitle.querySelector(".icon.review-star").cloneNode(true);
+                      const EMPTY = STAR.cloneNode(true);
+                    
+                      EMPTY.classList.remove("full");
+                      EMPTY.classList.add("empty");
+                    
+                    
+                      while(starsTitle.firstChild) {
+                        starsTitle.removeChild(starsTitle.firstChild);
+                      }
+                                        
+                    
+                      const reviewComment = reviewItem.querySelector(".review-comment").cloneNode(true);                                          
+                      reviewComment.innerText = content;
+                      const reviewDate = reviewItem.querySelector(".review-date").cloneNode(true);
+                    
+                      while(reviewItem.firstChild) {
+                        reviewItem.removeChild(reviewItem.firstChild);
+                      }
+                    
+                     
+                    
+                      reviewTitle.innerText = title;
+                      starsTitle.appendChild(reviewTitle);
+                      
+
+                                  switch (rating) {
+                        case 5:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          break;
+                        case 4:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break;
+                        case 3:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break;
+                        case 2:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break;
+                        case 1:
+                          starsTitle.appendChild(STAR.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          starsTitle.appendChild(EMPTY.cloneNode(true))
+                          break
+                      }
+
+                                  reviewTitle.innerText = title;
+
+                                  starsTitle.appendChild(reviewTitle);
+
+                                  reviewItem.appendChild(starsTitle);
+
+
+                                  let parsedDate;
+                                  if (typeof createdAt.toDate !== 'undefined') {
+                                     parsedDate = createdAt.toDate();
+                                  } else {
+                                     parsedDate = new Date(createdAt);
+                                  }
+
+                                  reviewDate.querySelector(".tiny-top-margin").innerText = `${monthNames[parsedDate.getMonth()]} ${parsedDate.getDate()} ${parsedDate.getFullYear()}`                      
+                                  reviewItem.appendChild(reviewDate);
+
+                                  reviewItem.appendChild(reviewComment);
+
+                                  reviewsContainer.appendChild(reviewItem);
+                                  
+                              })
+                                              seemore.addEventListener("click", () => loadMoreReviews());              
+                reviewsContainer.appendChild(seemore);
+
+                            })              
+            }
           } else {
             starsWrap.remove();
             
             const message = document.createElement("span");
             message.innerText = "No reviews for this product.";
             reviewsContainer.appendChild(message);
-          }
+          }                
         })
-            
-//       firebase.firestore().runTransaction((transaction) => {        
-//       transaction.get(document).then((doc) => {
-//         const data = doc.data();
-
-//         const newAverage =
-//           (data.numRatings * data.avgRating + rating.rating) /
-//           (data.numRatings + 1);
-
-//         transaction.update(document, {
-//           numRatings: data.numRatings + 1,
-//           avgRating: newAverage
-//         });
-        
-//         transaction.set(newRatingDocument, rating);
-//     });
-      
-
-      
+                  
       break;
   }
 };
