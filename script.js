@@ -215,6 +215,8 @@ const updatePageForHash = () => {
               newOrderItem.querySelector(".quantity.tiny-left-margin").innerText = item.quantity;
               newOrderWrapper.appendChild(newOrderItem);
             });
+            
+            newOrderWrapper.style.display = "flex";
               orderContainer.appendChild(newOrderWrapper);
           });
         })
@@ -713,6 +715,8 @@ const updatePageForHash = () => {
             const firstReviews = reviewsRef.orderBy("createdAt")
                                             .limit(5);
             
+             reviewsContainer.style.display = "block";
+            
             let nextReviews;
             let lastVisible;
             
@@ -825,6 +829,7 @@ const updatePageForHash = () => {
                 seemore.addEventListener("click", () => loadMoreReviews());
               
                 reviewsContainer.appendChild(seemore);
+                             
             });
             
             function loadMoreReviews() {
