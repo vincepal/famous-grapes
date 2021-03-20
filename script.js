@@ -952,6 +952,7 @@ const updatePageForHash = () => {
             const message = document.createElement("span");
             message.innerText = "No reviews for this product.";
             reviewsContainer.appendChild(message);
+            reviewsContainer.style.display = "block";
           }                
         })
                   
