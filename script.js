@@ -167,7 +167,8 @@ const updatePageForHash = () => {
         .firestore()
         .collection("users")
         .doc(firebase.auth().currentUser.email)
-        .collection("orders");
+        .collection("orders")
+        .orderBy("orderedAt", "desc");
       
       ordersRef
         .get()
@@ -544,14 +545,18 @@ const updatePageForHash = () => {
               .collection("users")
               .doc(currentUser.email)
               .set({
+                 email: currentUser.email,
+                 firstName,
+                 lastName,
                  dob: firebase.firestore.Timestamp.fromDate(new Date(
                   selectYear.value,
                   selectMonth.value - 1,
                   selectDay.value
-                ))
+                )),
+                createdAt: firebase.firestore.Timestamp.fromDate(new Date())
               });
 
-            await currentUser.sendEmailVerification();
+            // await currentUser.sendEmailVerification();
             formSignup.style.display = "none";
 
             const formDone = document.querySelector(".w-form-done");
