@@ -387,27 +387,42 @@ const updatePageForHash = () => {
         const collection = firebase.firestore().collection("products");
         const document = collection.doc(window.currentProductReview);
         const newReviewDocument = document.collection("reviews").doc();
+        const formDone = reviewModal.querySelector(".w-form-done");
+        const formFail = reviewModal.querySelector(".w-form-fail");
+        
+        if (!window.currentReviewRating) {            
+            formFail.style.display = "flex";
+        }
+        
         
         firebase.firestore().runTransaction((transaction) => {
           return transaction.get(document).then((doc) => {
-            if (doc.exists) {              
-              const data = doc.data();
+            if (doc.exists) {      
+               const data = doc.data();
+                  
+               if (data.numReviews && data.avgRating) {
+                 const newAverage =  (data.numReviews * data.avgRating + window.currentReviewRating) / (data.numReviews + 1);
 
-              const newAverage =  (data.numReviews * data.avgRating + window.currentReviewRating) / (data.numReviews + 1);
-
-              transaction.update(document, {
-                numReviews: data.numReviews + 1,
-                avgRating: newAverage
-              });
-            } else {            
-              return transaction.set(document, {
+                 transaction.update(document, {
+                    numReviews: data.numReviews + 1,
+                    avgRating: newAverage
+                 });                 
+               } else {
+                transaction.set(document, {
+                  numReviews: 1,
+                  avgRating: window.currentReviewRating
+                });                 
+               }
+              
+            } else {                          
+              transaction.set(document, {
                 numReviews: 1,
                 avgRating: window.currentReviewRating
               });
 
             }
-              
-            return transaction.set(newReviewDocument, {
+            
+            transaction.set(newReviewDocument, {
               title, 
               content,
               createdAt: firebase.firestore.Timestamp.fromDate(
@@ -417,14 +432,14 @@ const updatePageForHash = () => {
             });
           })
         })
-        
+                
+        formDone.style.display = "flex";
+      
         title.value = "";
         content.value = "";
+        makeAllEmpty();
         
-        const formDone = reviewModal.querySelector(".w-form-done");
-        formDone.style.display = "flex";
-        
-        reviewModal.removeEventListener("submit", handleReviewModalFormSubmit);
+        reviewModal.removeEventListener("submit", handleReviewModalFormSubmit);        
       }
       break;
     // case "checkout":
