@@ -65,7 +65,7 @@ const updatePageForHash = () => {
   }
 
   switch (key) {
-    case "your-account":
+    case "account-info":
       if (!window.user) {
         window.location.replace("/sign-in");
       }
@@ -131,7 +131,7 @@ const updatePageForHash = () => {
       });
 
       break;
-    case "your-account":
+    case "orders":
       if (!window.user) {
         window.location.replace("/sign-in");
       }
