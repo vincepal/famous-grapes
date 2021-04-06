@@ -65,7 +65,7 @@ const updatePageForHash = () => {
   }
 
   switch (key) {
-    case "dashboard-profile":
+    case "your-account":
       if (!window.user) {
         window.location.replace("/sign-in");
       }
@@ -131,7 +131,7 @@ const updatePageForHash = () => {
       });
 
       break;
-    case "dashboard-orders":
+    case "your-account":
       if (!window.user) {
         window.location.replace("/sign-in");
       }
