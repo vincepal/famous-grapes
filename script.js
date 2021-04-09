@@ -65,7 +65,7 @@ const updatePageForHash = () => {
   }
 
   switch (key) {
-    case "account-info":
+    case "your-account":
       if (!window.user) {
         window.location.replace("/sign-in");
       }
@@ -131,7 +131,7 @@ const updatePageForHash = () => {
       });
 
       break;
-    case "orders":
+    case "your-account":
       if (!window.user) {
         window.location.replace("/sign-in");
       }
@@ -580,7 +580,7 @@ const updatePageForHash = () => {
 
             formFail.style.display = "none";
 
-            window.location.replace("/dashboard");
+            window.location.replace("/your-account");
           })
           .catch(error => {
             const formFail = document.querySelector(".w-form-fail");
@@ -609,7 +609,7 @@ const updatePageForHash = () => {
           .signInWithEmailAndPassword(email, password)
           .then(user => {
             formSignin.style.display = "none";
-            window.location.replace("/dashboard");
+            window.location.replace("/your-account");
           })
           .catch(error => {
             const formFail = document.querySelector(".w-form-fail");
