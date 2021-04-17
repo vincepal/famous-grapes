@@ -212,7 +212,7 @@ const updatePageForHash = () => {
               }
               
               newOrderItem.querySelector(".product-name").innerText = item.name;
-              newOrderItem.querySelector(".product-price-text.smaller").innerText = `Subtotal ${item.price}`;
+              newOrderItem.querySelector(".product-price-text.smaller").innerText = `$ ${item.price}`;
               newOrderItem.querySelector(".quantity.tiny-left-margin").innerText = item.quantity;
               newOrderWrapper.appendChild(newOrderItem);
             });
@@ -451,19 +451,19 @@ const updatePageForHash = () => {
 
         const total = document
           .querySelector(".total-count-text")
-          .innerText.replace("CA$", "")
+          .innerText.replace("$", "")
           .trim();
 
         const subtotal = document
           .querySelector(".checkout-price")
-          .innerText.replace("CA$", "")
+          .innerText.replace("$", "")
           .trim();
 
         orderItemsEL.forEach(el => {
           const thumbnail = el.querySelector(".checkout-thumbnail")
           const name = el.querySelector("#product-name").innerText;
           const quantity = el.querySelector("#product-quantity").innerText;
-          const price = el.querySelector("#product-price").innerText.replace("CA$", "").trim();
+          const price = el.querySelector("#product-price").innerText.replace("$", "").trim();
 
 
           let slug = slugify(name);
