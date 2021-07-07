@@ -1,5 +1,15 @@
 window.user = null;
-
+var firebaseConfig = {
+  apiKey: "AIzaSyDFCBI7A033-jbvLAwXX2GMidIlmGg6WbY",
+  authDomain: "famous-grapes.firebaseapp.com",
+  projectId: "famous-grapes",
+  storageBucket: "famous-grapes.appspot.com",
+  messagingSenderId: "97548909603",
+  appId: "1:97548909603:web:fcf4cba37b35fcf2628596",
+  measurementId: "G-10MBF3PMJB"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
@@ -76,7 +86,7 @@ const updatePageForHash = () => {
         headingProfile.innerText = `Welcome back, ${window.user.displayName}`;
         headingProfile.style.display = "flex";
       }
-      
+
       const accountInfo = document.querySelectorAll(".paragraph")
             
       accountInfo[0].innerText = window.user.displayName;
