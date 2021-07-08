@@ -1,4 +1,5 @@
 window.user = null;
+console.log("I am from actions");
 var firebaseConfig = {
   apiKey: "AIzaSyDFCBI7A033-jbvLAwXX2GMidIlmGg6WbY",
   authDomain: "famous-grapes.firebaseapp.com",
