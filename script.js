@@ -1,5 +1,5 @@
 window.user = null;
-
+console.log("I am here");
 const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
