@@ -22,4 +22,4 @@ jobs:
     - name: install firebase
       run: npm i firebase-tools -g  
     - name: deploy
-      run: firebase deploy --token 1//03BL_ZBuLPJ9hCgYIARAAGAMSNwF-L9IrOPPvfCVJPQy26M-weY6FvBSNXeJFGf4lXALFzbxs_tCReGafHNrnQaG9hv1ZGtpXGDU
+      run: firebase deploy --token 1//06alc8OZXirv5CgYIARAAGAYSNwF-L9IrDBxO5iO2rPPMF_9TqOGWK_MN-_49oObZ6Wojd335V12kesSd2_S_8dC14lcvSkeZTZ4
