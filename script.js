@@ -10,7 +10,7 @@ var firebaseConfig = {
   measurementId: "G-10MBF3PMJB"
 };
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// firebase.initializeApp(firebaseConfig);
 const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
