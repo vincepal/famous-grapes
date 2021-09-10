@@ -84,7 +84,7 @@ const updatePageForHash = () => {
       const headingProfile = document.querySelector(".heading-2");      
 
       if (headingProfile) {
-        headingProfile.innerText = `Welcome back, ${window.user.displayName}`;
+        headingProfile.innerText = `${window.user.displayName}`;
         headingProfile.style.display = "flex";
       }
       
