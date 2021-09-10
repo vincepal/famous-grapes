@@ -474,7 +474,8 @@ const updatePageForHash = () => {
           const thumbnail = el.querySelector(".checkout-thumbnail")
           const name = el.querySelector("#product-name").innerText;
           const quantity = el.querySelector("#product-quantity").innerText;
-          const price = el.querySelector("#product-price").innerText.replace("$", "").trim();
+          // const price = el.querySelector("#product-price").innerText.replace("$", "").trim();
+          const price = el.querySelector("#product-price");
 
 
           let slug = slugify(name);
