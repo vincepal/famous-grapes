@@ -222,9 +222,9 @@ const updatePageForHash = () => {
                 newOrderItem.querySelector(".checkout-thumbnail").style.display = "none";            
               }
               
-              // newOrderItem.querySelector(".product-name").innerText = item.name;
-              // newOrderItem.querySelector(".product-price-text.smaller").innerText = '${item.price}';
-              // newOrderItem.querySelector(".quantity.tiny-left-margin").innerText = item.quantity;
+              newOrderItem.querySelector(".product-name").innerText = item.name;
+              newOrderItem.querySelector(".product-price-text.smaller").innerText = '${item.price}';
+              newOrderItem.querySelector(".quantity.tiny-left-margin").innerText = item.quantity;
               newOrderWrapper.appendChild(newOrderItem);
             });
             
